@@ -8,7 +8,7 @@ looks up **.prun** and **.prun.env** files and executes them.
 
 You can run it using:
 ```
-mvn exec:java
+mvn package exec:java
 ```
 
 There are several options you can pass
