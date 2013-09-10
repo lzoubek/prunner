@@ -101,6 +101,7 @@ public class RunProcessTask implements Callable<Integer> {
 		    try {
 			while ((line = input.readLine()) != null) {
 			    output.append(line + NEWLINE);
+			    output.flush();
 			}
 		    } catch (IOException e1) {
 			e1.printStackTrace();
@@ -121,6 +122,7 @@ public class RunProcessTask implements Callable<Integer> {
 		    try {
 			while ((line = input.readLine()) != null) {
 			    error.append(line + NEWLINE);
+			    error.flush();
 			}
 		    } catch (IOException e1) {
 			e1.printStackTrace();
