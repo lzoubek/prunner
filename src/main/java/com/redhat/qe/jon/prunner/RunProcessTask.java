@@ -9,7 +9,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -43,23 +46,37 @@ public class RunProcessTask implements Callable<Integer> {
 	    br.close();
 	}
     }
+    /**
+     * gets default environment variables that will inherit child process
+     * @return
+     */
+    private String[] getEnvironment()  throws IOException {
+	List<String> env = new ArrayList<String>();
+	for (Entry<String,String> e : readEnvp().entrySet()) {
+	    env.add(e.getKey()+"="+e.getValue());
+	}
+	return env.toArray(new String[]{});
+    }
 
-    private String[] readEnvp() throws IOException {
+    private Map<String,String> readEnvp() throws IOException {
 	File envFile = new File(this.cmdFile.getAbsolutePath() + ".env");
 	if (!envFile.exists()) {
 	    log.fine(".env file does not exist");
-	    return null;
+	    return System.getenv();
 	}
 	log.fine("Reading environment variables from ["+envFile.getAbsolutePath()+"]");
-	List<String> env = new ArrayList<String>();
+	Map<String,String> env = new LinkedHashMap<String, String>(System.getenv());
 	BufferedReader br = new BufferedReader(new FileReader(envFile));
 	try {
 	    String line = br.readLine();
 	    while (line != null) {
-		env.add(line);
+		String[] var = line.split("=",2);
+		if (var.length==2) {
+		    env.put(var[0], var[1]);
+		}
 		line = br.readLine();
 	    }
-	    return env.toArray(new String[] {});
+	    return env;
 	} finally {
 	    br.close();
 	}
@@ -86,7 +103,7 @@ public class RunProcessTask implements Callable<Integer> {
 		cmd = new String[] { "/bin/sh", "-c", command };
 	    }
 	    log.info("Running command: " + Arrays.toString(cmd));
-	    final Process p = Runtime.getRuntime().exec(cmd, readEnvp(), cmdFile.getParentFile());
+	    final Process p = Runtime.getRuntime().exec(cmd, getEnvironment(), cmdFile.getParentFile());
 
 	    this.writeStatus(ProcessStatus.RUNNING);
 	    final PrintWriter output = new PrintWriter(this.cmdFile.getAbsolutePath() + ".out");
